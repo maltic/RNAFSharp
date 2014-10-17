@@ -26,10 +26,58 @@ let parseSurfaces (str:string) =
             | _ -> failwith "Invalid character"
     parse [(-1, [])] 0
 
+let stemScore i j k = k
+let loopScore i k j l = k + l
 
+let zuker (rna:string) = 
+    let dpW = Array2D.create rna.Length rna.Length -1
+    let dpV = Array2D.create rna.Length rna.Length -1
+    let dpIM = Array2D.create rna.Length rna.Length -1
+    let rec W i j = 
+        if i >= j then 0
+        elif dpW.[i,j] > -1 then dpW.[i,j]
+        else
+            let mutable max = -1
+            let sz = j-i+1
+            for k in 0..sz do
+                for l in 0..sz-k do
+                    if (k > 0 || l > 0) && i+k-1 < j-l+1 then
+                        let tmp = loopScore i k j l + V (i+k) (j-l)
+                        if tmp > max then max <- tmp
+            dpW.[i,j] <- max
+            max
+    and V i j = 
+        if i >= j then 0
+        elif dpV.[i,j] > -1 then dpV.[i,j]
+        else
+            let mutable max = -1
+            for k in 1..(j-i) do
+                if i+k-1 < j-k+1 then
+                    let tmp = (stemScore i j k) + W (i+k) (j-k)
+                    if tmp > max then max <- tmp
+            dpV.[i,j] <- max
+            max
+    and IM i j = 
+        if i >= j then 0
+        elif dpIM.[i,j] > -1 then dpIM.[i,j]
+        else
+            let mutable max = -1
+            for k in 1..(j-i+1) do
+                let tmp =  System.Math.Max(V (j-k+1) j + IM i (j-k), 
+                                     loopScore 0 0 (j-k+1) k + IM i (j-k))
+                if tmp > max then max <- tmp
+            dpIM.[i,j] <- max
+            max
+    IM 0 (rna.Length-1)
 
 [<EntryPoint>]
 let main argv = 
-    let n = 10000000
-    printfn "%A" (parseSurfaces (new string [| for i in 1..n do yield if i <= (n/2) then '(' else ')'|]))
+    let sw = System.Diagnostics.Stopwatch()
+    sw.Start()
+    zuker (new string [| for i in 1..4 do yield ' ' |]) |> printfn "%A"
+    sw.Stop()
+    printfn "%A" (sw.ElapsedMilliseconds)
+    System.Console.Read() |> ignore
+    //let n = 10000000
+    //printfn "%A" (parseSurfaces (new string [| for i in 1..n do yield if i <= (n/2) then '(' else ')'|]))
     0 // return an integer exit code
