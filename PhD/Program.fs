@@ -84,7 +84,7 @@ let zuker (rna:string) =
 let main argv = 
     let sw = System.Diagnostics.Stopwatch()
     sw.Start()
-    zuker (new string [| for i in 1..350 do yield ' ' |]) |> printfn "%A"
+    zuker (new string [| for i in 1..110 do yield ' ' |]) |> printfn "%A"
     sw.Stop()
     printfn "%A" (sw.ElapsedMilliseconds)
     System.Console.Read() |> ignore
