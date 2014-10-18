@@ -27,25 +27,35 @@ let parseSurfaces (str:string) =
     parse [(-1, [])] 0
 
 let stemScore i j k = k
-let loopScore i k j l = k + l
+let internalLoopScore i k j l = k + l
+let bulgeScore i k = k
+let hairpinLoopScore i k = k
+let extenalDangleScore i k = k
 
 let zuker (rna:string) = 
     let dpW = Array2D.create rna.Length rna.Length -1
     let dpV = Array2D.create rna.Length rna.Length -1
     let dpIM = Array2D.create rna.Length rna.Length -1
     let rec W i j = 
-        if i >= j then 0
+        if i > j then 0
         elif dpW.[i,j] > -1 then dpW.[i,j]
         else
-            let mutable max = -1
             let sz = j-i+1
-            for k in 0..sz do
-                for l in 0..sz-k do
-                    if (k > 0 || l > 0) && i+k-1 < j-l+1 then
-                        let tmp = loopScore i k j l + V (i+k) (j-l)
+            let mutable max = hairpinLoopScore i sz
+            // bulges
+            for k in 1..sz do
+                let tmp = System.Math.Max(bulgeScore i k + V (i+k) j, 
+                            bulgeScore (j-k+1) k + V i (j-k))
+                if tmp > max then max <- tmp
+            let maxILSZ = System.Math.Max(sz, 30)
+            for k in 1..maxILSZ do
+                for l in 1..maxILSZ do
+                    if i+k-1 < j-l+1 then
+                        let tmp = internalLoopScore i k j l + V (i+k) (j-l)
                         if tmp > max then max <- tmp
-            dpW.[i,j] <- max
-            max
+            // try multiloop
+            dpW.[i,j] <- System.Math.Max(max, IM i j)
+            dpW.[i,j]
     and V i j = 
         if i >= j then 0
         elif dpV.[i,j] > -1 then dpV.[i,j]
@@ -58,13 +68,13 @@ let zuker (rna:string) =
             dpV.[i,j] <- max
             max
     and IM i j = 
-        if i >= j then 0
+        if i > j then 0
         elif dpIM.[i,j] > -1 then dpIM.[i,j]
         else
             let mutable max = -1
             for k in 1..(j-i+1) do
                 let tmp =  System.Math.Max(V (j-k+1) j + IM i (j-k), 
-                                     loopScore 0 0 (j-k+1) k + IM i (j-k))
+                            extenalDangleScore (j-k+1) k + IM i (j-k))
                 if tmp > max then max <- tmp
             dpIM.[i,j] <- max
             max
@@ -74,7 +84,7 @@ let zuker (rna:string) =
 let main argv = 
     let sw = System.Diagnostics.Stopwatch()
     sw.Start()
-    zuker (new string [| for i in 1..4 do yield ' ' |]) |> printfn "%A"
+    zuker (new string [| for i in 1..350 do yield ' ' |]) |> printfn "%A"
     sw.Stop()
     printfn "%A" (sw.ElapsedMilliseconds)
     System.Console.Read() |> ignore
