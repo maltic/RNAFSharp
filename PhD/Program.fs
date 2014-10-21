@@ -1,13 +1,8 @@
 ﻿
-module List =
-  let rec skipWhile f items =
-    match items with
-    | h :: t when f h -> skipWhile f t
-    | l -> l
 
 type RNASurface = 
-    | Reducible of RNASurface list * int * int
-    | Irreducible of int * int
+    | Reducible of RNASurface list * int * int * int // stem
+    | Irreducible of int * int // loop
 
 let parseIS (str:string) i = 
     Irreducible(i, 
@@ -17,7 +12,7 @@ let parseSurfaces (str:string) =
     let rec parse stack i =
         if i >= str.Length then // base case, must reach the end of the outer surface 
             match stack with
-            | (s, elems) :: [] -> Reducible(List.rev elems, s, i)
+            | (s, elems) :: [] -> List.rev elems
             | _ -> failwith "Mismatched parens"
         else
             match str.[i], stack with
@@ -27,7 +22,11 @@ let parseSurfaces (str:string) =
                 | _ -> failwith "Impossible"
             | '(', stack -> parse ((i, []) :: stack) (i+1) // push reducible surface on stack
             | ')', (hi, h) :: (mi, m) :: t -> // pop reducible from stack, merge with next stack element (the parent)
-                parse ((mi, (Reducible(List.rev h, hi, i) :: m)) :: t) (i+1)
+                match h with
+                | [Reducible(children, _, _, c)] -> 
+                    parse ((mi, (Reducible(children, hi, i, c+1) :: m)) :: t) (i+1) // continues a stem
+                | _ -> 
+                    parse ((mi, (Reducible(List.rev h, hi, i, 1) :: m)) :: t) (i+1) // closes a loop
             | ')' , _ :: [] -> failwith "Mismatched parens" // should never need to pop the outer surface
             | _ -> failwith "Invalid character"
     parse [(-1, [])] 0
@@ -49,17 +48,10 @@ type Model = {
     extenalDangle : int -> int -> double;
 }
 
-let scoreSurface model s =
-    let rec scoreInternalSurface model s =
-        let rec stemFind c l = 
-            match l with
-            | Reducible([Reducible(_) as r], _, _) -> stemFind (c+1) r
-            | other -> c, other
-        let c, next = stemFind 0 s
-        let i, j = match s with | Reducible(_, i, j) -> i,j | _ -> failwith "Impossible"
-        model.stem i j c + 
-            match next with
-            | Reducible(children, i, j) ->
+let scoreExternalLoop model loop =
+    let rec scoreInternalSurface model = function
+        | Reducible(children, i, j, sz) ->
+            model.stem i j sz + 
                 match children with
                 | [Irreducible(i, j); (Reducible(_) as r); Irreducible(k, l)] -> 
                     model.internalLoop i (j-i+1) k (l-k+1) + scoreInternalSurface model r
@@ -71,13 +63,10 @@ let scoreSurface model s =
                 | l -> List.fold (fun s t -> match t with 
                                                 | Irreducible(i, j) -> model.internalDangle i (j-i+1) + s
                                                 | r -> scoreInternalSurface model r + s) 0.0 l
-            | Irreducible(_) -> failwith "Impossible"
-    match s with
-    | Irreducible(i, j) -> failwith "Impossible"
-    | Reducible(l, _, _) -> 
-        List.fold (fun s t -> match t with 
-                                | Irreducible(i, j) -> model.extenalDangle i (j-i+1) + s
-                                | r -> scoreInternalSurface model r + s) 0.0 l
+        | Irreducible(_) -> failwith "Impossible"
+    List.fold (fun s t -> match t with 
+                            | Irreducible(i, j) -> model.extenalDangle i (j-i+1) + s
+                            | r -> scoreInternalSurface model r + s) 0.0 loop
 
 let zuker (rna:string) model = 
     let dpW = Array2D.create rna.Length rna.Length System.Double.MinValue
@@ -134,7 +123,6 @@ let zuker (rna:string) model =
             let mutable max = System.Double.MinValue
             for k in 0..j do
                 let tmp = EM (k-1) + System.Math.Max(V k j, model.extenalDangle k (j-k+1))
-                let f = System.Math.Max(V k j, model.extenalDangle k (j-k+1))
                 if tmp > max then max <- tmp
             dpEM.[j] <- max
             max
@@ -145,7 +133,7 @@ let main argv =
     let m = {
         stem=stemScore; internalDangle = internalDangleScore; extenalDangle = extenalDangleScore; lbulge = bulgeScore;
         internalLoop = internalLoopScore; hairpin=hairpinLoopScore; rbulge = bulgeScore;} 
-    System.Console.ReadLine() |> parseSurfaces |> scoreSurface m |> printfn "%A"
+    System.Console.ReadLine() |> parseSurfaces |> scoreExternalLoop m |> printfn "%A"
     System.Console.Read() |> ignore
     //let n = 10000000
     //printfn "%A" (parseSurfaces (new string [| for i in 1..n do yield if i <= (n/2) then '(' else ')'|]))
