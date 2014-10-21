@@ -128,12 +128,58 @@ let zuker (rna:string) model =
             max
     EM (rna.Length-1)
 
+type GeneticAlgorithm<'a> = { 
+    breeder : System.Random -> 'a -> 'a -> 'a; 
+    mutator: System.Random -> 'a -> 'a;
+    create : System.Random -> 'a;
+    fitness : 'a -> float;
+    elitism : float;
+    newBlood : float;
+    spawn : float;
+    mutate : float;
+    selection : float;
+}
+
+let runGA r ga population = 
+    let popSize = Array.length population
+    let elitism = System.Math.Round(float popSize * ga.elitism) |> int
+    let selected = System.Math.Round (ga.selection * float popSize) |> int
+    let newBlood = System.Math.Round (ga.newBlood * float popSize) |> int
+    let next = 
+        Array.init popSize 
+            (fun i ->
+                if i < elitism then population.[i]
+                elif i < elitism + newBlood then ga.create r
+                else
+                    if r.NextDouble() > ga.mutate then
+                        ga.breeder r population.[i % selected] population.[i % selected]
+                    else
+                        ga.mutator r population.[i % selected]
+            )
+    Array.sortInPlaceBy ga.fitness next
+    next
+
+let testBreeder _ a b = (a+b)/2.0
+let testMutate (r:System.Random) i = i + (r.NextDouble() - 0.5)
+let testFitness i = System.Math.Abs(12.32 - i)
+let testCreate (r:System.Random) = r.NextDouble()
+let testGA = {breeder = testBreeder; mutator = testMutate; fitness = testFitness;
+    elitism = 0.1; mutate = 0.8; spawn = 0.0; selection = 0.4; newBlood = 0.05;
+    create = testCreate}
+
+let evolve ga popSize steps = 
+    let r = System.Random()
+    Seq.fold (fun (s:'a[]) _ -> printfn "%f" (ga.fitness s.[0]); runGA r ga s) 
+        (Array.init popSize (fun _ -> ga.create r)) 
+        (seq {1..steps})
+
 [<EntryPoint>]
 let main argv = 
-    let m = {
-        stem=stemScore; internalDangle = internalDangleScore; extenalDangle = extenalDangleScore; lbulge = bulgeScore;
-        internalLoop = internalLoopScore; hairpin=hairpinLoopScore; rbulge = bulgeScore;} 
-    System.Console.ReadLine() |> parseSurfaces |> scoreExternalLoop m |> printfn "%A"
+    //let m = {
+    //    stem=stemScore; internalDangle = internalDangleScore; extenalDangle = extenalDangleScore; lbulge = bulgeScore;
+    //    internalLoop = internalLoopScore; hairpin=hairpinLoopScore; rbulge = bulgeScore;} 
+    //System.Console.ReadLine() |> parseSurfaces |> scoreExternalLoop m |> printfn "%A"
+    evolve testGA 100 300 |> printfn "%A"
     System.Console.Read() |> ignore
     //let n = 10000000
     //printfn "%A" (parseSurfaces (new string [| for i in 1..n do yield if i <= (n/2) then '(' else ')'|]))
