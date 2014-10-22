@@ -45,6 +45,11 @@
     <Reference Include="System.Numerics" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="RNAPrimary.fs" />
+    <Compile Include="RNASecondary.fs" />
+    <Compile Include="BasicModel.fs" />
+    <Compile Include="MFE.fs" />
+    <Compile Include="GA.fs" />
     <Compile Include="Program.fs" />
     <None Include="App.config" />
   </ItemGroup>
