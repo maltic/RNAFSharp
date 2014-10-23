@@ -50,7 +50,12 @@ type Paramaters =
         }
 
 let stackingScore (param:float[,]) (rna:RNAPrimary.Base[]) i j k =
-    Seq.sum (seq { for d in 0..k-1 -> param.[int rna.[i+d], int rna.[j-d]] })
+    Seq.sum (seq { for d in 0..k-1 -> 
+                    // disallowed invalid base pairings
+                    if not (RNAPrimary.validPair rna.[i+d] rna.[j-d]) then
+                        System.Double.MinValue
+                    else
+                        param.[int rna.[i+d], int rna.[j-d]] })
 let loopScore (param:float[]) (rna:RNAPrimary.Base[]) i j = 
     Seq.sum (seq { for k in i..j -> param.[int rna.[k]] })
 

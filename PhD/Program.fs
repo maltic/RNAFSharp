@@ -31,7 +31,13 @@ let main argv =
         stem=stemScore; internalDangle = internalDangleScore; extenalDangle = extenalDangleScore; lbulge = bulgeScore;
         internalLoop = internalLoopScore; hairpin=hairpinLoopScore; rbulge = bulgeScore; externalStemBonus = externalStemBonus; interalStemBonus = interalStemBonus} 
     let rna = System.Console.ReadLine() |> RNAPrimary.parse |> Seq.toArray
-    let model = BasicModel.makeModel rna (BasicModel.Paramaters.Random())
+    let params = BasicModel.Paramaters.Random()
+    let model = BasicModel.makeModel rna params
     printfn "%A" (MFE.zuker rna model)
-    System.Console.Read()
+    let ssScore = RNASecondary.parseSurfaces >> RNASecondary.scoreExternalLoop model
+    printfn "%A" rna
+    let best = rna |> RNASecondary.validSecondaryStructures |> Seq.maxBy ssScore
+    printfn "%A, %f" best (ssScore best)
+    printfn "%A" params
+    System.Console.Read() |> ignore
     0 // return an integer exit code
