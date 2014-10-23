@@ -48,6 +48,7 @@ type Model = {
     interalStemBonus : int -> int -> double;
 }
 
+
 /// Apply an energy model to an rna secondary structure
 let scoreExternalLoop model loop =
     let rec scoreInternalSurface = function

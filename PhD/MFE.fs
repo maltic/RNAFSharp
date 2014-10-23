@@ -6,7 +6,7 @@ open System
 let zuker (rna:RNAPrimary.Base[]) model = 
     let dpW = Array2D.create rna.Length rna.Length Double.MinValue
     let dpV = Array2D.create rna.Length rna.Length Double.MinValue
-    let dpIM = Array2D.create rna.Length rna.Length Double.MinValue
+    let dpIM = Array3D.create rna.Length rna.Length 3 Double.MinValue
     let dpEM = Array.create rna.Length Double.MinValue
     let IL_MAX_SIZE = 30
     let rec W i j = // i and j begin a loop (i-1 and j+1 are bonded)
@@ -26,7 +26,7 @@ let zuker (rna:RNAPrimary.Base[]) model =
                     let tmp = model.internalLoop i k l j + V (k+1) (l-1)
                     if tmp > max then max <- tmp
             if j-i+1 > 3 then // try multiloop if there is enough room
-                max <- Math.Max(max, IM i j)
+                max <- Math.Max(max, IM i j 2)
             dpW.[i,j] <- max
             max
     and V i j = // i and j close a stem externally
@@ -40,15 +40,18 @@ let zuker (rna:RNAPrimary.Base[]) model =
                 if tmp > max then max <- tmp
             dpV.[i,j] <- max
             max
-    and IM i j = // there is an internal multiloop starting at i and ending at j
-        if i > j then 0.0
-        elif dpIM.[i,j] > System.Double.MinValue then dpIM.[i,j]
+    /// there is an internal multiloop starting at i and ending at j, rem is the remaining stems to place
+    and IM i j rem =
+        if i > j then if rem = 0 then 0.0 else Double.MinValue
+        elif dpIM.[i,j,rem] > System.Double.MinValue then dpIM.[i,j,rem]
         else
             let mutable max = System.Double.MinValue
             for k in i..j do // k is start of dangle or stem
-                let tmp =  IM i (k-1) + System.Math.Max(V k j + model.interalStemBonus k j, model.internalDangle k j)
+                let stem = IM i (k-1) (Math.Max(0, rem-1)) + V k j + model.interalStemBonus k j
+                let dangle = IM i (k-1) rem + model.internalDangle k j
+                let tmp = Math.Max(stem, dangle)
                 if tmp > max then max <- tmp
-            dpIM.[i,j] <- max
+            dpIM.[i,j,rem] <- max
             max
     and EM j = // external loop ending at j
         if j < 0 then 0.0
@@ -60,9 +63,4 @@ let zuker (rna:RNAPrimary.Base[]) model =
                 if tmp > max then max <- tmp
             dpEM.[j] <- max
             max
-    let tmp = EM (rna.Length-1)
-    printfn "%A" dpEM
-    printfn "%A" dpIM
-    printfn "%A" dpV
-    printfn "%A" dpW
-    tmp
+    EM (rna.Length-1)

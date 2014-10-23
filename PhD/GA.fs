@@ -8,7 +8,6 @@ type GeneticAlgorithm<'a> = {
     fitness : 'a -> float;
     elitism : float;
     newBlood : float;
-    spawn : float;
     mutate : float;
     selection : float;
 }

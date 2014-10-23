@@ -50,12 +50,7 @@ type Paramaters =
         }
 
 let stackingScore (param:float[,]) (rna:RNAPrimary.Base[]) i j k =
-    Seq.sum (seq { for d in 0..k-1 -> 
-                    // disallowed invalid base pairings
-                    if not (RNAPrimary.validPair rna.[i+d] rna.[j-d]) then
-                        System.Double.MinValue
-                    else
-                        param.[int rna.[i+d], int rna.[j-d]] })
+    Seq.sum (seq { for d in 0..k-1 -> param.[int rna.[i+d], int rna.[j-d]] })
 let loopScore (param:float[]) (rna:RNAPrimary.Base[]) i j = 
     Seq.sum (seq { for k in i..j -> param.[int rna.[k]] })
 
@@ -87,7 +82,7 @@ type GASettings =
         mutationRate : float;
         mutationRange : float;
         crossoverRate : float;
-        computeFitness : Paramaters -> double;
+        testRNAs : seq<RNAPrimary.Base[]*Surface list>;
     }
 
 let calcFitness testRNAs parameters =
@@ -120,6 +115,51 @@ let mutate settings (r:System.Random) g =
             internalStemC = maybeMutate gparams.internalStemC;
         }
     {
-        fitness = settings.computeFitness p;
+        fitness = calcFitness settings.testRNAs p;
         parameters = p;
     }
+let breed settings (r:System.Random) ga gb = 
+    let maybeTake a b = 
+        if r.NextDouble() > settings.crossoverRate then
+            a
+        else
+            b
+    let ap, bp = ga.parameters, gb.parameters
+    let p = 
+        {
+            stacking = maybeTake ap.stacking bp.stacking;
+            unpaiedExteral = maybeTake ap.unpaiedExteral bp.unpaiedExteral;
+            unpairedInternal = maybeTake ap.unpairedInternal bp.unpairedInternal;
+            lbulge = maybeTake ap.lbulge bp.lbulge;
+            rbulge = maybeTake ap.rbulge bp.rbulge;
+            hairpin = maybeTake ap.hairpin bp.hairpin;
+            internalLoop = maybeTake ap.internalLoop bp.internalLoop;
+            externalStemM = maybeTake ap.externalStemM bp.externalStemM;
+            externalStemC = maybeTake ap.externalStemC bp.externalStemC;
+            internalStemM = maybeTake ap.internalStemM bp.internalStemM;
+            internalStemC = maybeTake ap.internalStemC bp.internalStemC;
+        }
+    {
+        fitness = calcFitness settings.testRNAs p;
+        parameters = p
+    }
+
+open GA
+let GATrainer settings = 
+    {
+        breeder = breed settings;
+        mutator = mutate settings;
+        creator = 
+            let p = Paramaters.Random()
+            fun _ ->  
+                {
+                    parameters = p;
+                    fitness = calcFitness settings.testRNAs p
+                };
+        fitness = fun g -> g.fitness;
+        elitism = 0.05;
+        newBlood = 0.01;
+        mutate = 0.5;
+        selection = 0.45;
+    }
+
