@@ -36,17 +36,18 @@ let parseSurfaces (str:string) =
 
 
 /// Free energy model
-type Model = { 
-    stem : int -> int -> int -> double;
-    internalLoop : int -> int -> int -> int -> double;
-    lbulge : int -> int -> double;
-    rbulge : int -> int -> double;
-    hairpin : int -> int -> double;
-    internalDangle : int -> int -> double;
-    extenalDangle : int -> int -> double;
-    externalStemBonus : int -> int -> double;
-    interalStemBonus : int -> int -> double;
-}
+type Model = 
+    { 
+        stem : int -> int -> int -> double;
+        internalLoop : int -> int -> int -> int -> double;
+        lbulge : int -> int -> double;
+        rbulge : int -> int -> double;
+        hairpin : int -> int -> double;
+        internalDangle : int -> int -> double;
+        extenalDangle : int -> int -> double;
+        externalStemBonus : int -> int -> double;
+        interalStemBonus : int -> int -> double;
+    }
 
 
 /// Apply an energy model to an rna secondary structure
@@ -82,7 +83,7 @@ let validSecondaryStructures (rna:RNAPrimary.Base[]) =
                 if List.isEmpty stack then yield System.String(s)
             else
                 match stack with
-                | h :: t when RNAPrimary.validPair rna.[h] rna.[i] ->
+                | h :: t (*when RNAPrimary.validPair rna.[h] rna.[i]*) ->
                     s.[i] <- ')'
                     yield! enumerate (i+1) t s
                 | _ -> ()

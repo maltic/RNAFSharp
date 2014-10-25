@@ -10,8 +10,7 @@ let zuker (rna:RNAPrimary.Base[]) model =
     let dpEM = Array.create rna.Length Double.MinValue
     let IL_MAX_SIZE = 30
     let rec W i j = // i and j begin a loop (i-1 and j+1 are bonded)
-        if i > j then Double.MinValue
-        elif dpW.[i,j] > Double.MinValue then dpW.[i,j]
+        if dpW.[i,j] > Double.MinValue then dpW.[i,j]
         else
             let mutable max = model.hairpin i j // hairpin
             for k in i..(j-1) do // k is the start of the succeeding stem, bulge from i, k-1
@@ -35,8 +34,7 @@ let zuker (rna:RNAPrimary.Base[]) model =
         else
             let mutable max = Double.MinValue
             for k in 1..(j-i+1)/2 do // k is stem size
-                let tmp = (model.stem i j k) + 
-                            if i+k <= j-k then W (i+k) (j-k) else 0.0 // stems with no hp loop
+                let tmp = (model.stem i j k) +  W (i+k) (j-k)
                 if tmp > max then max <- tmp
             dpV.[i,j] <- max
             max

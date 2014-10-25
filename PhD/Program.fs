@@ -65,9 +65,7 @@ let trainBasicModel rnas sstructs =
 
 [<EntryPoint>]
 let main argv = 
-    trainBasicModel 
-        ["GGCCAGAUUGAGCCUGGGAGCUCUCUGGCC"] 
-        ["(((((((..((((......)))))))))))"]
-        |> ignore
+    for i in 1..1000 do
+        testSequence (randomSequence 11)
     System.Console.Read() |> ignore
     0 // return an integer exit code
