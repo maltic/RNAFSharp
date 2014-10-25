@@ -51,8 +51,48 @@ type Parameters =
         iStemA : float;
         iStemB : float;
         iStemC : float;
-
     }
+    static member Random() = 
+        let r = System.Random()
+        let rand _ = r.NextDouble()
+        let b = RNAPrimary.BASES
+        {
+            stacking = Array4D.init b b b b (fun _ _ _ _ -> rand ())
+            stackA = rand();
+            stackB = rand();
+            stackC = rand();
+            stackEnds = Array2D.init b b (fun _ _ -> rand())
+            hpA = rand();
+            hpB = rand();
+            hpC = rand();
+            hpValues = Array.init b rand;
+            bulgeA = rand();
+            bulgeB = rand();
+            bulgeC = rand();
+            bulgeValues = Array.init b rand;
+            singleBulges = Array.init b rand;
+            ilA = rand();
+            ilB = rand();
+            ilC = rand();
+            ilValues = Array.init b rand;
+            ilAsymmetryA = rand ();
+            ilAsymmetryB = rand();
+            ilAsymmetryC = rand();
+            eDangleA = rand();
+            eDangleB = rand();
+            eDangleC = rand();
+            eDangleValues = Array.init b rand; 
+            iDangleA = rand();
+            iDangleB = rand();
+            iDangleC = rand();
+            iDangleValues = Array.init b rand;
+            eStemA = rand();
+            eStemB = rand();
+            eStemC = rand();
+            iStemA = rand();
+            iStemB = rand();
+            iStemC = rand();
+        }
 
 let jacobsonStockmayerEq a b c v = 
     a*v + b*(System.Math.Log(v, System.Math.E)) + c
@@ -60,6 +100,8 @@ let jacobsonStockmayerEq a b c v =
 let jacobsonStockmayer a b c (values:float[]) data = 
     let sum = Seq.fold (fun s t -> s+values.[t]) 0.0 data
     jacobsonStockmayerEq a b c sum
+
+let rnaRange (rna:RNAPrimary.Base[]) i j = seq {for k in i..j -> int rna.[k]}
 
 let linearEq m c v = m*v + c
 
@@ -71,20 +113,31 @@ let stackScore p (rna:RNAPrimary.Base[]) i j k =
         + p.stackEnds.[int rna.[i], int rna.[j]]
         + if k > 1 then p.stackEnds.[int rna.[i+k-1], int rna.[j-k+1]] else 0.0
 
-let hairPinScore p (rna:RNAPrimary.Base[]) i j = 
-     jacobsonStockmayer p.hpA p.hpB p.hpC p.hpValues (seq {for k in i..j -> int rna.[k]})
-
 let bulgeScore p (rna:RNAPrimary.Base[]) i j = 
     if i = j then p.singleBulges.[int rna.[i]]
     else
-       jacobsonStockmayer p.bulgeA p.bulgeB p.bulgeC p.bulgeValues (seq {for k in i..j -> int rna.[k]})
+       jacobsonStockmayer p.bulgeA p.bulgeB p.bulgeC p.bulgeValues (rnaRange rna i j)
 
 let ILScore p (rna:RNAPrimary.Base[]) (i:int) j k l = 
     let asymmetry = System.Math.Abs((i-j) - (k-l))
     let loopScore a b = 
-        jacobsonStockmayer p.ilA p.ilB p.ilC p.ilValues (seq {for k in a..b -> int rna.[k]})
+        jacobsonStockmayer p.ilA p.ilB p.ilC p.ilValues (rnaRange rna a b)
     loopScore i j + loopScore k l +
         if asymmetry > 0 then
             jacobsonStockmayerEq p.ilAsymmetryA p.ilAsymmetryB p.ilAsymmetryC (float asymmetry)
         else
             0.0
+
+let makeModel p rna = 
+    {
+        RNASecondary.stem = stackScore p rna;
+        RNASecondary.internalLoop = ILScore p rna;
+        RNASecondary.lbulge = bulgeScore p rna;
+        RNASecondary.rbulge = bulgeScore p rna;
+        RNASecondary.hairpin = fun i j -> rnaRange rna i j |> jacobsonStockmayer p.hpA p.hpB p.hpC p.hpValues;
+        RNASecondary.internalDangle = fun i j -> rnaRange rna i j |> jacobsonStockmayer p.iDangleA p.iDangleB p.iDangleC p.iDangleValues;
+        RNASecondary.interalStemBonus = fun i j -> jacobsonStockmayerEq p.eStemA p.eStemB p.eStemC (float (j-i));
+        RNASecondary.extenalDangle = fun i j -> rnaRange rna i j |> jacobsonStockmayer p.eDangleA p.eDangleB p.eDangleC p.eDangleValues;
+        RNASecondary.externalStemBonus = fun i j -> jacobsonStockmayerEq p.eStemA p.eStemB p.eStemC (float (j-i));
+    }
+

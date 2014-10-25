@@ -143,7 +143,7 @@ let breed settings (r:System.Random) ga gb =
         fitness = calcFitness settings.testRNAs p;
         parameters = p
     }
-
+    
 open GA
 let GATrainer settings = 
     {
