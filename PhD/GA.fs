@@ -18,7 +18,7 @@ let runGA r ga population =
     let selected = System.Math.Round (ga.selection * float popSize) |> int
     let newBlood = System.Math.Round (ga.newBlood * float popSize) |> int
     let next = 
-        Array.init popSize 
+        Array.Parallel.init popSize 
             (fun i ->
                 if i < elitism then population.[i]
                 elif i < elitism + newBlood then ga.creator r

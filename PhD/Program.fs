@@ -31,14 +31,14 @@ let randomSequence sz =
     new string [| for i in 1..sz -> b.[r.Next(3)]|]
 let testSequence s = 
     let rna = s |> RNAPrimary.parse |> Seq.toArray
-    let params = BasicModel.Paramaters.Random()
-    let model = BasicModel.makeModel rna params
+    let par = BasicModel.Paramaters.Random()
+    let model = BasicModel.makeModel rna par
     let ssScore = RNASecondary.parseSurfaces >> RNASecondary.scoreExternalLoop model
     let best = rna |> RNASecondary.validSecondaryStructures |> Seq.maxBy ssScore
     let bests = ssScore best
     let zuks = MFE.zuker rna model
     if System.Math.Abs(bests-zuks) > 0.00001 then
-        printfn "%A vs %A \n\n %A \n\n %A \n\n %A" bests zuks best rna params
+        printfn "%A vs %A \n\n %A \n\n %A \n\n %A" bests zuks best rna par
     else
         ()
 
@@ -56,15 +56,18 @@ let trainBasicModel rnas sstructs =
     let r = System.Random()
     Seq.fold 
         (fun (s:Genome[]) t -> 
-            printfn "Generation #%d: %f \n\n %A \n\n" t (ga.fitness s.[0]) s.[0]
+            printfn "Generation #%d: \n %A \n\n" t s.[0]
             GA.runGA r ga s
         )
-        (Array.init 25 (fun _ -> ga.creator r))
-        (seq {1..100})
+        (Array.init 100 (fun _ -> ga.creator r))
+        (seq {1..250})
 
 
 [<EntryPoint>]
 let main argv = 
-    trainBasicModel ["GAUCACUUCGGUGAUCACUUCGGU"; "GGCCAGAUUGAGCCUGGGAGCUCUCUGGCC"] ["....((((((((....))))))))"; "(((((((..((((......)))))))))))"]
+    trainBasicModel 
+        ["GGCCAGAUUGAGCCUGGGAGCUCUCUGGCC"] 
+        ["(((((((..((((......)))))))))))"]
+        |> ignore
     System.Console.Read() |> ignore
     0 // return an integer exit code
