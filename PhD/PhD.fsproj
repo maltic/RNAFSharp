@@ -50,6 +50,12 @@
     <Compile Include="MFE.fs" />
     <Compile Include="GA.fs" />
     <Compile Include="BasicModel.fs" />
+    <Compile Include="ModelFunctions.fs" />
+    <Compile Include="Stem.fs" />
+    <Compile Include="Bulge.fs" />
+    <Compile Include="InternalLoop.fs" />
+    <Compile Include="Hairpin.fs" />
+    <Compile Include="MultiLoop.fs" />
     <Compile Include="FullModel.fs" />
     <Compile Include="Program.fs" />
     <None Include="App.config" />

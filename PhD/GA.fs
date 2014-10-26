@@ -30,3 +30,16 @@ let runGA r ga population =
             )
     Array.sortInPlaceBy ga.fitness next
     next
+
+// some helper functions
+let maybeMutate rate range (r:System.Random) a = 
+        if r.NextDouble() > rate then
+            a
+        else
+            a + ((r.NextDouble() * range) - range/2.0)
+
+let maybeTake rate (r:System.Random) a b = 
+    if r.NextDouble() > rate then
+        a
+    else
+        b

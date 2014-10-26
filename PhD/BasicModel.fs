@@ -94,11 +94,7 @@ let calcFitness testRNAs parameters =
     Seq.sumBy helper testRNAs
 
 let mutate settings (r:System.Random) g = 
-    let maybeMutate a = 
-        if r.NextDouble() > settings.mutationRate then
-            a
-        else
-            a + ((r.NextDouble() * settings.mutationRange) - settings.mutationRange/2.0)
+    let maybeMutate = GA.maybeMutate settings.mutationRate settings.mutationRange r
     let gparams = g.parameters
     let p = 
         {
@@ -119,11 +115,7 @@ let mutate settings (r:System.Random) g =
         parameters = p;
     }
 let breed settings (r:System.Random) ga gb = 
-    let maybeTake a b = 
-        if r.NextDouble() > settings.crossoverRate then
-            a
-        else
-            b
+    let maybeTake a b = GA.maybeTake settings.crossoverRate r a b
     let ap, bp = ga.parameters, gb.parameters
     let p = 
         {
