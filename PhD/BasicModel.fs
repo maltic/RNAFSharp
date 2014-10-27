@@ -64,7 +64,7 @@ let makeModel (rna:RNAPrimary.Base[])  paramaters =
         rbulge = loopScore paramaters.rbulge rna;
         hairpin = loopScore paramaters.hairpin rna;
         internalDangle = loopScore paramaters.unpairedInternal rna;
-        extenalDangle = loopScore paramaters.unpaiedExteral rna;
+        externalDangle = loopScore paramaters.unpaiedExteral rna;
         externalStemBonus = 
             fun i j -> paramaters.externalStemM * float (j-i+1) + paramaters.externalStemC;
         interalStemBonus = 

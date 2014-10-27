@@ -1,7 +1,7 @@
 ﻿module ModelFunctions
 
 let jacobsonStockmayerEq a b c v = 
-    a*v + b*(System.Math.Log(v, System.Math.E)) + c
+    a*v + b*(if v <= 0.0 then 0.0 else System.Math.Log(v, System.Math.E)) + c
 
 let jacobsonStockmayer a b c (values:float[]) data = 
     let sum = Seq.fold (fun s t -> s+values.[t]) 0.0 data

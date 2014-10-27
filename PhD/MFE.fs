@@ -6,13 +6,13 @@ open System
 let zuker (rna:RNAPrimary.Base[]) model = 
     let dpW = Array2D.create rna.Length rna.Length Double.MinValue
     let dpV = Array2D.create rna.Length rna.Length Double.MinValue
-    let dpIM = Array3D.create rna.Length rna.Length 3 Double.MinValue
-    let dpEM = Array.create rna.Length Double.MinValue
+    let dpIM = Array4D.create rna.Length rna.Length 3 2 Double.MinValue
+    let dpEM = Array2D.create rna.Length 2 Double.MinValue
     let IL_MAX_SIZE = 30
     let rec W i j = // i and j begin a loop (i-1 and j+1 are bonded)
         if dpW.[i,j] > Double.MinValue then dpW.[i,j]
         else
-            let mutable max = model.hairpin i j // hairpin
+            let mutable max = model.hairpin i j // hairpin, lack of base-case allows stems without hp loops
             for k in i..(j-1) do // k is the start of the succeeding stem, bulge from i, k-1
                 let tmp = model.lbulge i (k-1) + V k j
                 if tmp > max then max <- tmp
@@ -25,7 +25,8 @@ let zuker (rna:RNAPrimary.Base[]) model =
                     let tmp = model.internalLoop i k l j + V (k+1) (l-1)
                     if tmp > max then max <- tmp
             if j-i+1 > 3 then // try multiloop if there is enough room
-                max <- Math.Max(max, IM i j 2)
+                max <- Math.Max(max,    // try starting with/without stem
+                    Math.Max(IM i j 2 0 |> float, IM i j 2 1))
             dpW.[i,j] <- max
             max
     and V i j = // i and j close a stem externally
@@ -34,31 +35,40 @@ let zuker (rna:RNAPrimary.Base[]) model =
         else
             let mutable max = Double.MinValue
             for k in 1..(j-i+1)/2 do // k is stem size
-                let tmp = (model.stem i j k) +  W (i+k) (j-k)
+                let tmp = (model.stem i j k) + W (i+k) (j-k)
                 if tmp > max then max <- tmp
             dpV.[i,j] <- max
             max
     /// there is an internal multiloop starting at i and ending at j, rem is the remaining stems to place
-    and IM i j rem =
+    and IM i j rem stem =
         if i > j then if rem = 0 then 0.0 else Double.MinValue
-        elif dpIM.[i,j,rem] > System.Double.MinValue then dpIM.[i,j,rem]
+        elif dpIM.[i,j,rem,stem] > System.Double.MinValue then dpIM.[i,j,rem,stem]
         else
             let mutable max = System.Double.MinValue
             for k in i..j do // k is start of dangle or stem
-                let stem = IM i (k-1) (Math.Max(0, rem-1)) + V k j + model.interalStemBonus k j
-                let dangle = IM i (k-1) rem + model.internalDangle k j
-                let tmp = Math.Max(stem, dangle)
+                let tmp = 
+                    if stem = 1 then
+                        let nextRem = Math.Max(0, rem-1)
+                        V k j + model.interalStemBonus k j //coaxial and non coaxial
+                            + Math.Max(IM i (k-1) nextRem 0, IM i (k-1) nextRem 1)
+                    else
+                        IM i (k-1) rem 1 + model.internalDangle k j
                 if tmp > max then max <- tmp
-            dpIM.[i,j,rem] <- max
+            dpIM.[i,j,rem,stem] <- max
             max
-    and EM j = // external loop ending at j
+    and EM j stem = // external loop ending at j
         if j < 0 then 0.0
-        elif dpEM.[j] > Double.MinValue then dpEM.[j]
+        elif dpEM.[j,stem] > Double.MinValue then dpEM.[j,stem]
         else
             let mutable max = Double.MinValue
             for k in 0..j do // k is start of dangle or stem
-                let tmp = EM (k-1) + System.Math.Max(V k j + model.externalStemBonus k j, model.extenalDangle k j)
+                let tmp =
+                    if stem = 1 then 
+                        V k j + model.externalStemBonus k j + 
+                            Math.Max(EM (k-1) 0, EM (k-1) 1) // try coaxial stack, and stack-stem
+                    else 
+                        model.externalDangle k j + EM (k-1) 1
                 if tmp > max then max <- tmp
-            dpEM.[j] <- max
+            dpEM.[j,stem] <- max
             max
-    EM (rna.Length-1)
+    Math.Max(EM (rna.Length-1) 0, EM (rna.Length-1) 1)

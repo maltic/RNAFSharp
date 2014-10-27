@@ -44,7 +44,7 @@ type Model =
         rbulge : int -> int -> double;
         hairpin : int -> int -> double;
         internalDangle : int -> int -> double;
-        extenalDangle : int -> int -> double;
+        externalDangle : int -> int -> double;
         externalStemBonus : int -> int -> double;
         interalStemBonus : int -> int -> double;
     }
@@ -71,7 +71,7 @@ let scoreExternalLoop model loop =
                                                         scoreInternalSurface r + s) 0.0 l
         | Irreducible(_) -> failwith "Impossible"
     List.fold (fun s t -> match t with 
-                            | Irreducible(i, j) -> model.extenalDangle i j + s
+                            | Irreducible(i, j) -> model.externalDangle i j + s
                             | Reducible(_, i, j, _) as r -> 
                                 model.externalStemBonus i j + 
                                     scoreInternalSurface r + s) 0.0 loop

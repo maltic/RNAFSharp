@@ -91,14 +91,15 @@ let trainFullModel rnas sstructs =
             printfn "Generation #%d: \n %A \n\n" t s.[0]
             GA.runGA r ga s
         )
-        (Array.init 100 (fun _ -> ga.creator r))
+        (Array.init 1000 (fun _ -> ga.creator r))
         (seq {1..250})
 
 
 
 [<EntryPoint>]
 let main argv = 
-    for i in 1..10000 do
-        testSequence (randomSequence 3)
+    trainFullModel
+        ["AUGCGAUCGUAGC"; "UAGCUUGCGAUCG"]
+        [".(())..(..).."; "((((....))))."] |> ignore
     System.Console.Read() |> ignore
     0 // return an integer exit code

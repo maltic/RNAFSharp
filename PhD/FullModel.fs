@@ -27,7 +27,7 @@ let makeModel rna p =
         RNASecondary.hairpin = Hairpin.score p.HP rna;
         RNASecondary.internalDangle = MultiLoop.scoreInternalDangle p.ML rna;
         RNASecondary.interalStemBonus = MultiLoop.scoreInternalStem p.ML rna;
-        RNASecondary.extenalDangle = MultiLoop.scoreExternalDangle p.ML rna;
+        RNASecondary.externalDangle = MultiLoop.scoreExternalDangle p.ML rna;
         RNASecondary.externalStemBonus = MultiLoop.scoreExternalStem p.ML rna;
     }
 
@@ -42,6 +42,10 @@ let calcFitness testRNAs parameters =
         let genomeModel = makeModel rna parameters
         let mfe = MFE.zuker rna genomeModel
         let actual = RNASecondary.scoreExternalLoop genomeModel ss
+        if System.Double.IsNaN(mfe) then printfn "mfe is NaN"
+        elif System.Double.IsInfinity(mfe) then printfn "mfe is inf"
+        elif System.Double.IsNaN(actual) then printfn "actual is NaN"
+        elif System.Double.IsInfinity(actual) then printfn "actual is inf"
         mfe - actual
     Seq.sumBy helper testRNAs
 
