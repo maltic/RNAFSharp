@@ -31,8 +31,8 @@ let randomSequence sz =
     new string [| for i in 1..sz -> b.[r.Next(3)]|]
 let testSequence s = 
     let rna = s |> RNAPrimary.parse |> Seq.toArray
-    let par = BasicModel.Paramaters.Random()
-    let model = BasicModel.makeModel rna par
+    let par = FullModel.Parameters.Random()
+    let model = FullModel.makeModel rna par
     let ssScore = RNASecondary.parseSurfaces >> RNASecondary.scoreExternalLoop model
     let best = rna |> RNASecondary.validSecondaryStructures |> Seq.maxBy ssScore
     let bests = ssScore best
@@ -62,10 +62,43 @@ let trainBasicModel rnas sstructs =
         (Array.init 100 (fun _ -> ga.creator r))
         (seq {1..250})
 
+let fullModelGA testRNAs =
+    let fitness = FullModel.calcFitness testRNAs 
+    {
+        GA.breeder = FullModel.breed fitness 0.4;
+        GA.mutator = FullModel.mutate fitness 0.5 1.0;
+        GA.creator = 
+            fun _ -> 
+                let p = FullModel.Parameters.Random()
+                { FullModel.parameters = p; FullModel.fitness = fitness p };
+        GA.fitness = fun a -> a.fitness;
+        elitism = 0.05;
+        newBlood = 0.05;
+        mutate = 0.4;
+        selection = 0.45;
+    }
+
+let trainFullModel rnas sstructs = 
+    let testRNAs = 
+        Seq.zip 
+            (Seq.map (RNAPrimary.parse>>Seq.toArray) rnas) 
+            (Seq.map RNASecondary.parseSurfaces sstructs)
+
+    let r = System.Random()
+    let ga = fullModelGA testRNAs
+    Seq.fold 
+        (fun (s:FullModel.Genome[]) t -> 
+            printfn "Generation #%d: \n %A \n\n" t s.[0]
+            GA.runGA r ga s
+        )
+        (Array.init 100 (fun _ -> ga.creator r))
+        (seq {1..250})
+
+
 
 [<EntryPoint>]
 let main argv = 
-    for i in 1..1000 do
-        testSequence (randomSequence 11)
+    for i in 1..10000 do
+        testSequence (randomSequence 3)
     System.Console.Read() |> ignore
     0 // return an integer exit code

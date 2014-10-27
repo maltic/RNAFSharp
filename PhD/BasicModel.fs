@@ -2,7 +2,7 @@
 
 open RNASecondary
 
-type Paramaters = 
+type Parameters = 
     {
         stacking : float[,];
         unpaiedExteral : float[];
@@ -74,7 +74,7 @@ let makeModel (rna:RNAPrimary.Base[])  paramaters =
 type Genome = 
     {
         fitness : double;
-        parameters : Paramaters;
+        parameters : Parameters;
     }
 
 type GASettings = 
@@ -142,7 +142,7 @@ let GATrainer settings =
         breeder = breed settings;
         mutator = mutate settings;
         creator = 
-            let p = Paramaters.Random()
+            let p = Parameters.Random()
             fun _ ->  
                 {
                     parameters = p;

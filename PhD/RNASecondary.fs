@@ -63,6 +63,7 @@ let scoreExternalLoop model loop =
                 | [(Reducible(_) as r); Irreducible(i, j)] -> 
                     model.rbulge i j + scoreInternalSurface r
                 | [Irreducible(i, j)] -> model.hairpin i j
+                | [] -> model.hairpin (i+sz) (j-sz)
                 | l -> List.fold (fun s t -> match t with 
                                                 | Irreducible(i, j) -> model.internalDangle i j + s
                                                 | Reducible(_, i, j, _) as r -> 
