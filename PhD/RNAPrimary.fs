@@ -1,9 +1,17 @@
 ﻿module RNAPrimary
 
+let BASES = 4
+
 type Base = A = 0 | U = 1 | G = 2 | C = 3
 
-// TODO This should be made immutable
-let bases = [| Base.A; Base.U; Base.G; Base.C |]
+/// Check if a and b form a canonical base pair
+let validPair a b = 
+    let arr = [| a; b |] |> Array.sort
+    match arr with
+    | [| Base.A; Base.U |] -> true
+    | [| Base.U; Base.G |] -> true
+    | [| Base.G; Base.C |] -> true
+    | _ -> false
 
 /// Parse a string into an rna sequence, reports errors
 let parse (str:string) =

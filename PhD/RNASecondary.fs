@@ -1,38 +1,6 @@
 ﻿module RNASecondary
 
-/// A base pairing.
-type Pair = 
-    | GU = 0
-    | UG = 1
-    | GC = 2
-    | CG = 3
-    | AU = 4
-    | UA = 5
 
-/// All valid pairs.
-let pairs = [| Pair.GU; Pair.UG; Pair.GC; Pair.CG; Pair.AU; Pair.UA |]
-
-/// Check if a and b form a canonical base pair
-let validPair a b = 
-    let arr = [| a; b |] |> Array.sort
-    match arr with
-    | [| RNAPrimary.Base.A; RNAPrimary.Base.U |] -> true
-    | [| RNAPrimary.Base.U; RNAPrimary.Base.G |] -> true
-    | [| RNAPrimary.Base.G; RNAPrimary.Base.C |] -> true
-    | _ -> false
-
-/// Given two bases that constitute a valid base pair, returns the Pair representation.
-let basesToPair a b = 
-    match a, b with
-    | RNAPrimary.Base.G, RNAPrimary.Base.U -> Pair.GU
-    | RNAPrimary.Base.U, RNAPrimary.Base.G -> Pair.UG
-    | RNAPrimary.Base.G, RNAPrimary.Base.C -> Pair.GC
-    | RNAPrimary.Base.C, RNAPrimary.Base.G -> Pair.CG
-    | RNAPrimary.Base.A, RNAPrimary.Base.U -> Pair.AU
-    | RNAPrimary.Base.U, RNAPrimary.Base.A -> Pair.UA
-    | _ -> failwith "Invalid base pair"
-
-/// A structural surface. Basically a chord in the circle graph representation of an RNA secondary structure.
 type Surface = 
     | Reducible of Surface list * int * int * int // stem (i, j, size)
     | Irreducible of int * int // loop (i, j)
