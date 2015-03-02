@@ -4,11 +4,12 @@ module TurnerSimple
 /// Energy parameters for stack/helix structures.
 type Stack = 
     {
+        init : float;
         surfaces : float[,];
     }
     /// Applies the energy model to score a stack i,j and i+1,j-1 in rna.
     member this.score (rna:RNAPrimary.Base[]) i j = 
-        this.surfaces.[
+        this.init + this.surfaces.[
             RNASecondary.basesToPair (rna.[i]) (rna.[j]) |> int,
             RNASecondary.basesToPair (rna.[i+1]) (rna.[j-1]) |> int
         ]
@@ -94,7 +95,11 @@ type Parameters =
             fun () -> enumer.MoveNext() |> ignore; enumer.Current
         let nBases, nPairs = RNAPrimary.bases.Length, RNASecondary.pairs.Length
         {
-            stack = { surfaces = Array2D.init nPairs nPairs (fun _ _ -> next()) };
+            stack = 
+                { 
+                    init = next();
+                    surfaces = Array2D.init nPairs nPairs (fun _ _ -> next()) 
+                };
             hp = 
                 {
                     a = next();
