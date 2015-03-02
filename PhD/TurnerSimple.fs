@@ -83,6 +83,7 @@ type Multi =
     member this.score unpaired branches = 
         this.a + this.b * unpaired + this.c * branches
 
+open RNASecondary
 /// Energy parameters for the simplified Turner model.
 type Parameters = 
     {
@@ -97,7 +98,7 @@ type Parameters =
         let next = 
             let enumer = stream.GetEnumerator()
             fun () -> enumer.MoveNext() |> ignore; enumer.Current
-        let nBases, nPairs = RNAPrimary.bases.Length, RNASecondary.pairs.Length
+        let nBases, nPairs = RNAPrimary.bases.Length, pairs.Length
         {
             stack = 
                 { 
@@ -130,3 +131,28 @@ type Parameters =
                     c = next()
                 }
         }
+
+    static member score p rna loop =
+        let rec scoreInternalSurface = function
+            | Reducible(children, i, j, sz) ->
+                p.stack.score rna i j sz + 
+                    match children with
+                    | [Irreducible(i, j); (Reducible(_) as r); Irreducible(k, l)] -> 
+                        p.intern.score rna i j k l + scoreInternalSurface r
+                    | [Irreducible(i, j); (Reducible(_) as r)] -> 
+                        p.bulge.score (j-i+1) + scoreInternalSurface r
+                    | [(Reducible(_) as r); Irreducible(i, j)] -> 
+                        p.bulge.score (j-i+1) + scoreInternalSurface r
+                    | [Irreducible(i, j)] -> p.hp.score rna i j
+                    | [] -> 0.0 // stack without hp loop
+                    | l -> List.fold (fun s t -> match t with 
+                                                    | Irreducible(i, j) -> p.multi.b * float (j-i+1) + s
+                                                    | Reducible(_, i, j, _) as r -> 
+                                                        p.multi.c + 
+                                                            scoreInternalSurface r + s) 0.0 l
+            | Irreducible(_) -> failwith "Impossible"
+        List.fold (fun s t -> match t with 
+                                | Irreducible(i, j) -> p.multi.b * float (j-i+1) + s
+                                | Reducible(_, i, j, _) as r -> 
+                                    p.multi.c + 
+                                        scoreInternalSurface r + s) 0.0 loop

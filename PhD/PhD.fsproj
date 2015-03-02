@@ -55,15 +55,15 @@
     <Reference Include="System.Numerics" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="PRNG.fs" />
+    <Compile Include="DP.fs" />
+    <Compile Include="GA.fs" />
     <Compile Include="RNAPrimary.fs" />
     <Compile Include="RNASecondary.fs" />
     <Compile Include="ModelFunctions.fs" />
     <Compile Include="TurnerSimple.fs" />
-    <Compile Include="DP.fs" />
     <Compile Include="MFESimple.fs" />
     <Compile Include="MFE.fs" />
-    <Compile Include="PRNG.fs" />
-    <Compile Include="GA.fs" />
     <Compile Include="BasicModel.fs" />
     <Compile Include="Stem.fs" />
     <Compile Include="Bulge.fs" />
