@@ -42,7 +42,8 @@
     <Reference Include="FSharp.Core, Version=$(TargetFSharpCoreVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <Private>True</Private>
     </Reference>
-    <Reference Include="FSharpx.Core, Version=1.8.41.0, Culture=neutral, PublicKeyToken=null">
+    <Reference Include="FSharpx.Core">
+      <HintPath>..\packages\FSharpx.Core.1.8.41\lib\40\FSharpx.Core.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="mscorlib" />
@@ -56,7 +57,6 @@
     <Compile Include="GA.fs" />
     <Compile Include="RNAPrimary.fs" />
     <Compile Include="RNASecondary.fs" />
-    <Compile Include="ModelFunctions.fs" />
     <Compile Include="TurnerSimple.fs" />
     <Compile Include="MFESimple.fs" />
     <Compile Include="Program.fs" />

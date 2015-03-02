@@ -2,6 +2,6 @@
 
 [<EntryPoint>]
 let main argv = 
-    MFESimple.test 1 4
+    MFESimple.test 4 100
     System.Console.ReadLine() |> ignore
     0 // return an integer exit code

@@ -30,7 +30,7 @@ let basesToPair a b =
     | RNAPrimary.Base.C, RNAPrimary.Base.G -> Pair.CG
     | RNAPrimary.Base.A, RNAPrimary.Base.U -> Pair.AU
     | RNAPrimary.Base.U, RNAPrimary.Base.A -> Pair.UA
-    | _ -> failwith "Invalid base pair"
+    | _ -> failwith "Invalid pair"
 
 /// A structural surface. Basically a chord in the circle graph representation of an RNA secondary structure.
 type Surface = 
@@ -116,7 +116,7 @@ let validSecondaryStructures (rna:RNAPrimary.Base[]) =
                 if List.isEmpty stack then yield System.String(s)
             else
                 match stack with
-                | h :: t (*when RNAPrimary.validPair rna.[h] rna.[i]*) ->
+                | h :: t when validPair rna.[h] rna.[i] ->
                     s.[i] <- ')'
                     yield! enumerate (i+1) t s
                 | _ -> ()

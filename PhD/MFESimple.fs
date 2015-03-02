@@ -7,11 +7,13 @@ type Parameterization =
       p : TurnerSimple.Parameters }
     
     member this.loopEnergy i k l j = 
-        if i = k && l = j then Double.MaxValue
+        if not (RNASecondary.validPair (this.rna.[i]) (this.rna.[j])) then Double.MaxValue
+        elif i + 1 = j then 0.0 // empty hairpin loops
         elif k = l then this.p.hp.score this.rna i j
-        elif i = k then this.p.bulge.score (j - l + 1)
-        elif l = j then this.p.bulge.score (k - i + 1)
-        elif k + 1 = i && l + 1 = j then this.p.stack.scoreSurface this.rna i j
+        elif not (RNASecondary.validPair (this.rna.[k]) (this.rna.[l])) then Double.MaxValue
+        elif k - 1 = i && l + 1 = j then this.p.stack.scoreSurface this.rna i j
+        elif k = i + 1 then this.p.bulge.score (j - l - 1)
+        elif l = j - 1 then this.p.bulge.score (k - i - 1)
         else this.p.intern.score this.rna i k l j
     
     member this.V i j = 
@@ -21,7 +23,8 @@ type Parameterization =
                          for k in i + 1..j - 2 do
                              for l in k + 1..j - 1 do
                                  yield this.loopEnergy i k l j + this.V k l
-                         yield this.M (i + 1) (j - 1) 0 + this.p.multi.a
+                         yield this.loopEnergy i i i j
+                         yield this.M (i + 1) (j - 1) 0
                      })
     
     member this.M i j b = 
@@ -35,20 +38,48 @@ type Parameterization =
                              yield this.M i (k - 1) (Math.Max(2, b + 1)) + this.V k j + this.p.multi.c 
                                    + this.p.stack.init
                      })
+    
+    member this.E i = 
+        if i < 0 then this.p.multi.a
+        else 
+            Seq.min (seq { 
+                         yield this.p.multi.b + this.E(i - 1)
+                         for j in 0..i - 1 do
+                             let a = this.V j i
+                             let g = ()
+                             yield this.E(j - 1) + this.p.multi.c + this.V j i + this.p.stack.init
+                     })
 
-let test sz iterations =
+let test sz iterations = 
     let r = System.Random()
+    
     let randomSequence sz = 
         let b = "augc"
-        new string [| for i in 1..sz -> b.[r.Next(3)]|]
+        new string [| for i in 1..sz -> b.[r.Next(3)] |]
+    
     let testSequence s = 
-        let rna = s |> RNAPrimary.parse |> Seq.toArray
-        let par = {rna = rna; p = TurnerSimple.Parameters.ofSeq (PRNG.stream (System.DateTime.Now.Millisecond) (fun r -> r.NextDouble()))}
+        let rna = 
+            s
+            |> RNAPrimary.parse
+            |> Seq.toArray
+        
+        let par = 
+            { rna = rna
+              p = 
+                  TurnerSimple.Parameters.ofSeq 
+                      (PRNG.stream (System.DateTime.Now.Millisecond) (fun r -> r.NextDouble())) }
+        
         let ssScore = RNASecondary.parseSurfaces >> par.p.score par.rna
-        let best = rna |> RNASecondary.validSecondaryStructures |> Seq.maxBy ssScore
+        
+        let best = 
+            rna
+            |> RNASecondary.validSecondaryStructures
+            |> Seq.minBy ssScore
+        
         let bests = ssScore best
-        let zuks = par.M 0 (rna.Length-1) 0
-        if System.Math.Abs(bests-zuks) > 0.00001 then
+        let zuks = par.E(rna.Length - 1)
+        if System.Math.Abs(bests - zuks) > 0.00001 then 
             printfn "%A vs %A \n\n %A \n\n %A \n\n %A" bests zuks best rna par
+    
     for i in 1..iterations do
         testSequence (randomSequence sz)

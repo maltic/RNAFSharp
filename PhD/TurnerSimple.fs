@@ -29,7 +29,7 @@ type Hairpin =
     member this.score (rna:RNAPrimary.Base[]) i j = 
         this.terminals.[
             RNASecondary.basesToPair (rna.[i]) (rna.[j]) |> int,
-             int rna.[i+1], int rna.[j-1]
+                int rna.[i+1], int rna.[j-1]
         ]
         + this.a + this.b * log (j-i+1 |> float)
 
@@ -61,7 +61,7 @@ type Internal =
                 let s = Array.sort [|rna.[a];rna.[b]|]
                 if Array.exists ((=) s) sorted then score else 0.0
         let a, u, g = RNAPrimary.Base.A, RNAPrimary.Base.U, RNAPrimary.Base.G
-        ModelFunctions.jacobsonStockmayerEq 0.0 this.a 0.0 (lsz+rsz |> float)
+        this.a * log (lsz+rsz |> float)
         + if lsz <> rsz then this.asymmetry else 0.0
         + 
             let scorer = scoreIndexes [(a,u); (g,u)] this.AUGUclosure
