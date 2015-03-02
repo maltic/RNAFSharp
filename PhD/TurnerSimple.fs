@@ -93,8 +93,41 @@ type Parameters =
         intern : Internal;
         multi : Multi;
     }
+
+    static member toSeq p =
+        let enumerate2D arr = 
+            seq {
+                for i in 0..Array2D.length1 arr - 1 do
+                    for j in 0..Array2D.length2 arr-1 do
+                        yield arr.[i,j]
+            }
+        let enumerate3D arr = 
+            seq {
+                for i in 0..Array3D.length1 arr - 1 do
+                    for j in 0..Array3D.length2 arr-1 do
+                        for k in 0..Array3D.length3 arr-1 do
+                            yield arr.[i,j,k]
+            }
+        seq {
+            yield p.stack.init
+            yield! enumerate2D p.stack.surfaces
+            yield p.hp.a
+            yield p.hp.b
+            yield! enumerate3D p.hp.terminals
+            yield p.bulge.a
+            yield p.bulge.b
+            yield p.intern.a
+            yield p.intern.asymmetry
+            yield p.intern.AUGUclosure
+            yield p.intern.GAterminal
+            yield p.intern.UUterminal
+            yield p.multi.a
+            yield p.multi.b
+            yield p.multi.c
+        }
+
     /// Returns an instance of Parameters whose elements are extracted from stream.
-    static member fromSeq (stream : float seq) = 
+    static member ofSeq (stream : float seq) = 
         let next = 
             let enumer = stream.GetEnumerator()
             fun () -> enumer.MoveNext() |> ignore; enumer.Current
@@ -132,27 +165,27 @@ type Parameters =
                 }
         }
 
-    static member score p rna loop =
+    member p.score rna loop =
         let rec scoreInternalSurface = function
             | Reducible(children, i, j, sz) ->
                 p.stack.score rna i j sz + 
                     match children with
-                    | [Irreducible(i, j); (Reducible(_) as r); Irreducible(k, l)] -> 
-                        p.intern.score rna i j k l + scoreInternalSurface r
+                    | [Irreducible(_); (Reducible(_, k, l, _) as r); Irreducible(_)] -> 
+                        p.intern.score rna i k l j + scoreInternalSurface r
                     | [Irreducible(i, j); (Reducible(_) as r)] -> 
                         p.bulge.score (j-i+1) + scoreInternalSurface r
                     | [(Reducible(_) as r); Irreducible(i, j)] -> 
                         p.bulge.score (j-i+1) + scoreInternalSurface r
-                    | [Irreducible(i, j)] -> p.hp.score rna i j
+                    | [Irreducible(_)] -> p.hp.score rna i j
                     | [] -> 0.0 // stack without hp loop
                     | l -> List.fold (fun s t -> match t with 
                                                     | Irreducible(i, j) -> p.multi.b * float (j-i+1) + s
                                                     | Reducible(_, i, j, _) as r -> 
                                                         p.multi.c + 
-                                                            scoreInternalSurface r + s) 0.0 l
+                                                            scoreInternalSurface r + s) 0.0 l + p.multi.a
             | Irreducible(_) -> failwith "Impossible"
         List.fold (fun s t -> match t with 
                                 | Irreducible(i, j) -> p.multi.b * float (j-i+1) + s
                                 | Reducible(_, i, j, _) as r -> 
                                     p.multi.c + 
-                                        scoreInternalSurface r + s) 0.0 loop
+                                        scoreInternalSurface r + s) 0.0 loop + p.multi.a

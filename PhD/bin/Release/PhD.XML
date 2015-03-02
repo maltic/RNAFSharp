@@ -5,169 +5,7 @@
 <member name="">
 
 </member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="T:BasicModel">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="T:Bulge">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="T:FullModel">
+<member name="T:DP">
 
 </member>
 <member name="">
@@ -230,58 +68,7 @@
 <member name="">
 
 </member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="T:Hairpin">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="T:InternalLoop">
-
-</member>
-<member name="">
-
-</member>
-<member name="T:MFE">
+<member name="T:MFESimple">
 
 </member>
 <member name="">
@@ -302,130 +89,7 @@
 <member name="">
 
 </member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="T:MultiLoop">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
+<member name="T:PRNG">
 
 </member>
 <member name="">
@@ -455,11 +119,6 @@
 <member name="M:RNAPrimary.parse(System.String)">
 <summary>
  Parse a string into an rna sequence, reports errors
-</summary>
-</member>
-<member name="M:RNAPrimary.validPair(RNAPrimary.Base,RNAPrimary.Base)">
-<summary>
- Check if a and b form a canonical base pair
 </summary>
 </member>
 <member name="">
@@ -506,8 +165,36 @@
 <member name="">
 
 </member>
+<member name="T:RNASecondary.Surface">
+<summary>
+ A structural surface. Basically a chord in the circle graph representation of an RNA secondary structure.
+</summary>
+</member>
 <member name="">
 
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="T:RNASecondary.Pair">
+<summary>
+ A base pairing.
+</summary>
 </member>
 <member name="M:RNASecondary.validSecondaryStructures(RNAPrimary.Base[])">
 <summary>
@@ -527,6 +214,21 @@
 <member name="M:RNASecondary.parseIS(System.String,System.Int32)">
 <summary>
  Parse an irreducible surface
+</summary>
+</member>
+<member name="M:RNASecondary.basesToPair(RNAPrimary.Base,RNAPrimary.Base)">
+<summary>
+ Given two bases that constitute a valid base pair, returns the Pair representation.
+</summary>
+</member>
+<member name="M:RNASecondary.validPair(RNAPrimary.Base,RNAPrimary.Base)">
+<summary>
+ Check if a and b form a canonical base pair
+</summary>
+</member>
+<member name="P:RNASecondary.pairs">
+<summary>
+ All valid pairs.
 </summary>
 </member>
 <member name="T:RNASecondary">
@@ -553,6 +255,41 @@
 <member name="">
 
 </member>
+<member name="M:TurnerSimple.Parameters.ofSeq(System.Collections.Generic.IEnumerable{System.Double})">
+<summary>
+ Returns an instance of Parameters whose elements are extracted from stream.
+</summary>
+</member>
+<member name="T:TurnerSimple.Parameters">
+<summary>
+ Energy parameters for the simplified Turner model.
+</summary>
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="M:TurnerSimple.Multi.score(System.Double,System.Double)">
+<summary>
+ Retrusn the energy contribution of a multiloop given the number of unpaired bases and branches.
+</summary>
+</member>
+<member name="T:TurnerSimple.Multi">
+<summary>
+ Energy parameters for mutliloops.
+</summary>
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
 <member name="">
 
 </member>
@@ -562,8 +299,74 @@
 <member name="">
 
 </member>
-<member name="T:Stem">
+<member name="M:TurnerSimple.Internal.score(RNAPrimary.Base[],System.Int32,System.Int32,System.Int32,System.Int32)">
+<summary>
+ Returns the energy contribution of an internal loop closed exteriorly by i,j and interiorly by k,j.
+</summary>
+</member>
+<member name="T:TurnerSimple.Internal">
+<summary>
+ Energy parameters for internal loops.
+</summary>
+</member>
+<member name="">
 
+</member>
+<member name="">
+
+</member>
+<member name="M:TurnerSimple.Bulge.score(System.Int32)">
+<summary>
+ Returns the energy contribution of a bulge loop of size sz.
+</summary>
+</member>
+<member name="T:TurnerSimple.Bulge">
+<summary>
+ Energy parameters for bulge loops.
+</summary>
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="M:TurnerSimple.Hairpin.score(RNAPrimary.Base[],System.Int32,System.Int32)">
+<summary>
+ Returns the energy contribution of a hairpin loop closed by a bond i,j in a primary sequence rna.
+</summary>
+</member>
+<member name="T:TurnerSimple.Hairpin">
+<summary>
+ Energy parameters for hairpin loops.
+</summary>
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="M:TurnerSimple.Stack.score(RNAPrimary.Base[],System.Int32,System.Int32,System.Int32)">
+<summary>
+ Applies the energy model to score a stack starting at i,j in rna, with k pairs.
+</summary>
+</member>
+<member name="T:TurnerSimple.Stack">
+<summary>
+ Energy parameters for stack/helix structures.
+</summary>
+</member>
+<member name="T:TurnerSimple">
+<summary>
+ An energy model based on a simplified version of Tuner99.
+</summary>
 </member>
 </members>
 </doc>
