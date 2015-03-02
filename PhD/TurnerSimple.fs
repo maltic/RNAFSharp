@@ -7,12 +7,16 @@ type Stack =
         init : float;
         surfaces : float[,];
     }
-    /// Applies the energy model to score a stack i,j and i+1,j-1 in rna.
-    member this.score (rna:RNAPrimary.Base[]) i j = 
-        this.init + this.surfaces.[
-            RNASecondary.basesToPair (rna.[i]) (rna.[j]) |> int,
-            RNASecondary.basesToPair (rna.[i+1]) (rna.[j-1]) |> int
-        ]
+    member this.scoreSurface (rna:RNAPrimary.Base[]) i j =
+        this.surfaces.[
+                RNASecondary.basesToPair (rna.[i]) (rna.[j]) |> int,
+                RNASecondary.basesToPair (rna.[i+1]) (rna.[j-1]) |> int
+            ]
+    /// Applies the energy model to score a stack starting at i,j in rna, with k pairs.
+    member this.score (rna:RNAPrimary.Base[]) i j k = 
+        if k = 1 then this.init
+        else
+            this.scoreSurface rna i j + this.score rna (i+1) (j-1) (k-1)
 
 /// Energy parameters for hairpin loops.
 type Hairpin = 
