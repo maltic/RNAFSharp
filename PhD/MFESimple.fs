@@ -27,7 +27,7 @@ type FETables(rna : RNAPrimary.Base [], p : TurnerSimple.Parameters)  =
                          for k in i + 1..j - 2 do
                              for l in k + 1..j-1 do
                                  yield loopEnergy i k l j + V k l
-                         yield loopEnergy i i i j
+                         yield loopEnergy i -1 -1 j
                          yield M (i + 1) (j - 1) 0
                      })
             Vt.[i,j]
@@ -75,7 +75,7 @@ let test sz iterations =
             s
             |> RNAPrimary.parse
             |> Seq.toArray
-        let p = PRNG.doubles DateTime.Now.Millisecond |> TurnerSimple.Parameters.ofSeq
+        let p = PRNG.stream DateTime.Now.Millisecond (fun r -> r.NextDouble() * 10.0 - 5.0) |> TurnerSimple.Parameters.ofSeq
         let par = FETables(rna, p)
         
         let ssScore = RNASecondary.parseSurfaces >> p.score rna
@@ -92,6 +92,7 @@ let test sz iterations =
             printfn "%A" par.ETable
             printfn "%A" par.VTable
             printfn "%A" par.MTable
+            printfn "%A" (FETables(rna, p))
     
     for i in 1..iterations do
         testSequence (randomSequence sz)

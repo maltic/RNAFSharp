@@ -170,8 +170,8 @@ type Parameters =
             | Reducible(children, i, j, sz) ->
                 p.stack.score rna i j sz +
                     match children with
-                    | [Irreducible(_); (Reducible(_, k, l, _) as r); Irreducible(_)] -> 
-                        p.intern.score rna i k l j + scoreInternalSurface r
+                    | [Irreducible(i, _); (Reducible(_, k, l, _) as r); Irreducible(_, j)] -> 
+                        p.intern.score rna (i-1) k l (j+1) + scoreInternalSurface r
                     | [Irreducible(i, j); (Reducible(_) as r)] -> 
                         p.bulge.score (j-i+1) + scoreInternalSurface r
                     | [(Reducible(_) as r); Irreducible(i, j)] -> 
@@ -180,10 +180,10 @@ type Parameters =
                     | [] -> 0.0 // stack without hp loop
                     | l -> List.sumBy (fun t -> match t with 
                                                     | Irreducible(i, j) -> p.multi.b * float (j-i+1)
-                                                    | Reducible(_, i, j, _) as r -> 
+                                                    | Reducible(_) as r -> 
                                                         p.multi.c + scoreInternalSurface r) l + p.multi.a
             | Irreducible(_) -> failwith "Impossible"
         List.sumBy (fun t -> match t with 
                                 | Irreducible(i, j) -> p.multi.b * float (j-i+1)
-                                | Reducible(_, i, j, _) as r -> 
+                                | Reducible(_) as r -> 
                                     p.multi.c + scoreInternalSurface r) loop + p.multi.a
