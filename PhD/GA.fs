@@ -23,7 +23,7 @@ let run randStream seed config population =
             let next = 
                 Array.Parallel.init popSize 
                     (fun i ->
-                        let r = PRNG.stream (seed+generation+i) (fun (r:Random) -> r.NextDouble())
+                        let r = PRNG.doubles (seed+generation+i)
                         if i < elitism then population.[i]
                         elif i < elitism + newBlood then config.creator r
                         else

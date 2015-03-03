@@ -31,7 +31,7 @@ type Hairpin =
             RNASecondary.basesToPair (rna.[i]) (rna.[j]) |> int,
                 int rna.[i+1], int rna.[j-1]
         ]
-        + this.a + this.b * log (j-i+1 |> float)
+        + this.a + this.b * log (j-i-1 |> float)
 
 /// Energy parameters for bulge loops.
 type Bulge = 
@@ -168,7 +168,7 @@ type Parameters =
     member p.score rna loop =
         let rec scoreInternalSurface = function
             | Reducible(children, i, j, sz) ->
-                p.stack.score rna i j sz + 
+                p.stack.score rna i j sz +
                     match children with
                     | [Irreducible(_); (Reducible(_, k, l, _) as r); Irreducible(_)] -> 
                         p.intern.score rna i k l j + scoreInternalSurface r
@@ -176,16 +176,14 @@ type Parameters =
                         p.bulge.score (j-i+1) + scoreInternalSurface r
                     | [(Reducible(_) as r); Irreducible(i, j)] -> 
                         p.bulge.score (j-i+1) + scoreInternalSurface r
-                    | [Irreducible(_)] -> p.hp.score rna i j
+                    | [Irreducible(i,j)] -> p.hp.score rna (i-1) (j+1)
                     | [] -> 0.0 // stack without hp loop
-                    | l -> List.fold (fun s t -> match t with 
-                                                    | Irreducible(i, j) -> p.multi.b * float (j-i+1) + s
+                    | l -> List.sumBy (fun t -> match t with 
+                                                    | Irreducible(i, j) -> p.multi.b * float (j-i+1)
                                                     | Reducible(_, i, j, _) as r -> 
-                                                        p.multi.c + 
-                                                            scoreInternalSurface r + s) 0.0 l + p.multi.a
+                                                        p.multi.c + scoreInternalSurface r) l + p.multi.a
             | Irreducible(_) -> failwith "Impossible"
-        List.fold (fun s t -> match t with 
-                                | Irreducible(i, j) -> p.multi.b * float (j-i+1) + s
+        List.sumBy (fun t -> match t with 
+                                | Irreducible(i, j) -> p.multi.b * float (j-i+1)
                                 | Reducible(_, i, j, _) as r -> 
-                                    p.multi.c + 
-                                        scoreInternalSurface r + s) 0.0 loop + p.multi.a
+                                    p.multi.c + scoreInternalSurface r) loop + p.multi.a

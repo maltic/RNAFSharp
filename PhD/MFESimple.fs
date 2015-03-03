@@ -2,53 +2,66 @@
 
 open System
 
-type Parameterization = 
-    { rna : RNAPrimary.Base []
-      p : TurnerSimple.Parameters }
+type FETables(rna : RNAPrimary.Base [], p : TurnerSimple.Parameters)  =
     
-    member this.loopEnergy i k l j = 
-        if not (RNASecondary.validPair (this.rna.[i]) (this.rna.[j])) then Double.MaxValue
-        elif i + 1 = j then 0.0 // empty hairpin loops
-        elif k = l then this.p.hp.score this.rna i j
-        elif not (RNASecondary.validPair (this.rna.[k]) (this.rna.[l])) then Double.MaxValue
-        elif k - 1 = i && l + 1 = j then this.p.stack.scoreSurface this.rna i j
-        elif k = i + 1 then this.p.bulge.score (j - l - 1)
-        elif l = j - 1 then this.p.bulge.score (k - i - 1)
-        else this.p.intern.score this.rna i k l j
+    let sz = rna.Length
+    let Vt = Array2D.create sz sz Double.NaN
+    let Mt = Array3D.create sz sz 3 Double.NaN
+    let Et = Array.create sz Double.NaN
     
-    member this.V i j = 
+    let loopEnergy i k l j = 
+        if i + 1 = j then 0.0 // empty hairpin loops
+        elif k = l then p.hp.score rna i j
+        elif not (RNASecondary.validPair (rna.[k]) (rna.[l])) then Double.MaxValue
+        elif k - 1 = i && l + 1 = j then p.stack.scoreSurface rna i j
+        elif k - 1 = i then p.bulge.score (j - l - 1) + p.stack.init
+        elif l + 1 = j then p.bulge.score (k - i - 1) + p.stack.init
+        else p.intern.score rna i k l j + p.stack.init
+    
+    let rec V i j = 
         if i >= j then Double.MaxValue
+        elif not (RNASecondary.validPair (rna.[i]) (rna.[j])) then Double.MaxValue
+        elif not (Double.IsNaN Vt.[i,j]) then Vt.[i,j]
         else 
-            Seq.min (seq { 
+            Vt.[i,j] <- Seq.min (seq { 
                          for k in i + 1..j - 2 do
-                             for l in k + 1..j - 1 do
-                                 yield this.loopEnergy i k l j + this.V k l
-                         yield this.loopEnergy i i i j
-                         yield this.M (i + 1) (j - 1) 0
+                             for l in k + 1..j-1 do
+                                 yield loopEnergy i k l j + V k l
+                         yield loopEnergy i i i j
+                         yield M (i + 1) (j - 1) 0
                      })
+            Vt.[i,j]
     
-    member this.M i j b = 
+    and M i j b = 
         if i > j then 
-            if b = 2 then this.p.multi.a
+            if b = 2 then p.multi.a
             else Double.MaxValue
+        elif not (Double.IsNaN Mt.[i,j,b]) then Mt.[i,j,b]
         else 
-            Seq.min (seq { 
-                         yield this.p.multi.b + this.M i (j - 1) b
+            Mt.[i,j,b] <- Seq.min (seq { 
+                         yield p.multi.b + M i (j - 1) b
                          for k in i..j - 1 do
-                             yield this.M i (k - 1) (Math.Max(2, b + 1)) + this.V k j + this.p.multi.c 
-                                   + this.p.stack.init
+                             yield M i (k - 1) (Math.Min(2, b + 1)) + V k j + p.multi.c 
+                                   + p.stack.init
                      })
+            Mt.[i,j,b]
     
-    member this.E i = 
-        if i < 0 then this.p.multi.a
+    and E i = 
+        if i < 0 then p.multi.a
+        elif not (Double.IsNaN Et.[i]) then Et.[i]
         else 
-            Seq.min (seq { 
-                         yield this.p.multi.b + this.E(i - 1)
-                         for j in 0..i - 1 do
-                             let a = this.V j i
-                             let g = ()
-                             yield this.E(j - 1) + this.p.multi.c + this.V j i + this.p.stack.init
-                     })
+            Et.[i] <- Seq.min (seq { 
+                            yield p.multi.b + E (i - 1)
+                            for j in 0..i - 1 do
+                                yield E (j - 1) + p.multi.c + V j i + p.stack.init
+                        } (*|> fun s -> printfn "%A %d" s i; s*))
+            Et.[i]
+
+    do E (rna.Length-1) |> ignore
+
+    member this.ETable = Et
+    member this.VTable = Vt
+    member this.MTable = Mt
 
 let test sz iterations = 
     let r = System.Random()
@@ -62,14 +75,10 @@ let test sz iterations =
             s
             |> RNAPrimary.parse
             |> Seq.toArray
+        let p = PRNG.doubles DateTime.Now.Millisecond |> TurnerSimple.Parameters.ofSeq
+        let par = FETables(rna, p)
         
-        let par = 
-            { rna = rna
-              p = 
-                  TurnerSimple.Parameters.ofSeq 
-                      (PRNG.stream (System.DateTime.Now.Millisecond) (fun r -> r.NextDouble())) }
-        
-        let ssScore = RNASecondary.parseSurfaces >> par.p.score par.rna
+        let ssScore = RNASecondary.parseSurfaces >> p.score rna
         
         let best = 
             rna
@@ -77,9 +86,12 @@ let test sz iterations =
             |> Seq.minBy ssScore
         
         let bests = ssScore best
-        let zuks = par.E(rna.Length - 1)
+        let zuks = par.ETable.[(rna.Length-1)]
         if System.Math.Abs(bests - zuks) > 0.00001 then 
-            printfn "%A vs %A \n\n %A \n\n %A \n\n %A" bests zuks best rna par
+            printfn "%A vs %A \n\n %A \n\n %A \n\n %A" bests zuks best rna p
+            printfn "%A" par.ETable
+            printfn "%A" par.VTable
+            printfn "%A" par.MTable
     
     for i in 1..iterations do
         testSequence (randomSequence sz)
