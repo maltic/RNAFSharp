@@ -42,7 +42,6 @@ type Bulge =
     /// Returns the energy contribution of a bulge loop of size sz.
     member this.score sz = 
         this.a + this.b * log (float sz)
-
 /// Energy parameters for internal loops.
 type Internal =
     {
@@ -56,10 +55,10 @@ type Internal =
     member this.score (rna:RNAPrimary.Base[]) i k l j = 
         let lsz, rsz = k-i-1, j-l-1 // left and right size of internal loop
         let scoreIndexes pairs score = 
-            let sorted = [| for (a,b) in pairs do yield Array.sort [|a;b|] |]
             fun a b -> 
-                let s = Array.sort [|rna.[a];rna.[b]|]
-                if Array.exists ((=) s) sorted then score else 0.0
+                let a, b = rna.[a], rna.[b]
+                let ordered, reversed = (a,b), (b,a)
+                if List.exists (fun elem -> elem = ordered || elem = reversed) pairs then score else 0.0
         let a, u, g = RNAPrimary.Base.A, RNAPrimary.Base.U, RNAPrimary.Base.G
         this.a * log (lsz+rsz |> float)
         + if lsz <> rsz then this.asymmetry else 0.0

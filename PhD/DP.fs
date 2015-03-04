@@ -5,7 +5,6 @@ let memoize baseCases (fn:'a->'b) =
     for (bi, bo) in baseCases do
         d.Add(bi, bo)
     fun inp -> 
-        printfn "%A" (d.GetHashCode())
         if d.ContainsKey(inp) then 
             d.[inp] 
         else 

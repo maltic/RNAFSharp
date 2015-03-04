@@ -59,6 +59,7 @@
     <Compile Include="RNASecondary.fs" />
     <Compile Include="TurnerSimple.fs" />
     <Compile Include="MFESimple.fs" />
+    <Compile Include="PFFE.fs" />
     <Compile Include="Program.fs" />
     <None Include="App.config" />
     <None Include="packages.config" />
